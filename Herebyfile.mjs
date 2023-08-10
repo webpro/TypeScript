@@ -28,7 +28,6 @@ const copyright = memoize(async () => {
     return contents.replace(/\r\n/g, "\n");
 });
 
-
 export const buildScripts = task({
     name: "scripts",
     description: "Builds files in the 'scripts' folder.",
