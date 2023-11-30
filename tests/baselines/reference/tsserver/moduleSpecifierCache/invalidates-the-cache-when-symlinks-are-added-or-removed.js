@@ -291,32 +291,6 @@ Info seq  [hh:mm:ss:mss] response:
     }
 After request
 
-PolledWatches::
-/a/lib/lib.d.ts:
-  {"pollingInterval":500}
-
-FsWatches::
-/package.json:
-  {}
-/src/ambient.d.ts:
-  {}
-/src/b-link.ts:
-  {}
-/src/c.ts:
-  {}
-/tsconfig.json:
-  {}
-
-FsWatches *deleted*::
-/src/b.ts:
-  {}
-
-FsWatchesRecursive::
-/node_modules:
-  {}
-/src:
-  {}
-
 Before request
 
 Info seq  [hh:mm:ss:mss] request:
@@ -362,6 +336,8 @@ FsWatches::
 /src/ambient.d.ts:
   {}
 /src/b-link.ts:
+  {}
+/src/b.ts:
   {}
 /tsconfig.json:
   {}
@@ -899,6 +875,8 @@ FsWatches::
 
 FsWatches *deleted*::
 /src/b-link.ts:
+  {}
+/src/b.ts:
   {}
 
 FsWatchesRecursive::

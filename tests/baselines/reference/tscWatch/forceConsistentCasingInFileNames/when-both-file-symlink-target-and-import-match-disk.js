@@ -167,13 +167,16 @@ Output::
 FileWatcher:: Triggered with /user/username/projects/myproject/XY.ts 1:: WatchInfo: /user/username/projects/myproject/XY.ts 250 undefined Source file
 Scheduling update
 Elapsed:: *ms FileWatcher:: Triggered with /user/username/projects/myproject/XY.ts 1:: WatchInfo: /user/username/projects/myproject/XY.ts 250 undefined Source file
+FileWatcher:: Triggered with /user/username/projects/myproject/link.ts 1:: WatchInfo: /user/username/projects/myproject/link.ts 250 undefined Source file
+Scheduling update
+Elapsed:: *ms FileWatcher:: Triggered with /user/username/projects/myproject/link.ts 1:: WatchInfo: /user/username/projects/myproject/link.ts 250 undefined Source file
 
 
 Timeout callback:: count: 1
-1: timerToUpdateProgram *new*
+2: timerToUpdateProgram *new*
 
 Before running Timeout callback:: count: 1
-1: timerToUpdateProgram
+2: timerToUpdateProgram
 
 After running Timeout callback:: count: 0
 Output::
@@ -193,11 +196,20 @@ link.ts
   Matched by default include pattern '**/*'
 b.ts
   Matched by default include pattern '**/*'
-[[90m12:00:42 AM[0m] Found 0 errors. Watching for file changes.
+[[90m12:00:45 AM[0m] Found 0 errors. Watching for file changes.
 
 
 
 //// [/user/username/projects/myproject/XY.js]
+"use strict";
+// some comment
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.b = exports.a = void 0;
+exports.a = 1;
+exports.b = 2;
+
+
+//// [/user/username/projects/myproject/link.js]
 "use strict";
 // some comment
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -231,10 +243,12 @@ Program files::
 
 Semantic diagnostics in builder refreshed for::
 /user/username/projects/myproject/XY.ts
+/user/username/projects/myproject/link.ts
 /user/username/projects/myproject/b.ts
 
 Shape signatures in builder refreshed for::
 /user/username/projects/myproject/xy.ts (computed .d.ts)
 /user/username/projects/myproject/b.ts (computed .d.ts)
+/user/username/projects/myproject/link.ts (computed .d.ts)
 
 exitCode:: ExitStatus.undefined

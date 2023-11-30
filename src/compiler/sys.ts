@@ -15,6 +15,7 @@ import {
     endsWith,
     enumerateInsertsAndDeletes,
     FileSystemEntries,
+    GetCanonicalFileName,
     getDirectoryPath,
     getFallbackOptions,
     getNormalizedAbsolutePath,
@@ -40,6 +41,7 @@ import {
     some,
     startsWith,
     timestamp,
+    toPath,
     unorderedRemoveItem,
     WatchDirectoryKind,
     WatchFileKind,
@@ -378,11 +380,10 @@ function createDynamicPriorityPollingWatchFile(host: {
     }
 }
 
-function createUseFsEventsOnParentDirectoryWatchFile(fsWatch: FsWatch, useCaseSensitiveFileNames: boolean): HostWatchFile {
+function createUseFsEventsOnParentDirectoryWatchFile(fsWatch: FsWatch, toCanonicalName: GetCanonicalFileName): HostWatchFile {
     // One file can have multiple watchers
     const fileWatcherCallbacks = createMultiMap<string, FileWatcherCallback>();
     const dirWatchers = new Map<string, DirectoryWatcher>();
-    const toCanonicalName = createGetCanonicalFileName(useCaseSensitiveFileNames);
     return nonPollingWatchFile;
 
     function nonPollingWatchFile(fileName: string, callback: FileWatcherCallback, _pollingInterval: PollingInterval, fallbackOptions: WatchOptions | undefined): FileWatcher {
@@ -475,12 +476,11 @@ interface SingleFileWatcher<T extends FileWatcherCallback | FsWatchCallback> {
 }
 function createSingleWatcherPerName<T extends FileWatcherCallback | FsWatchCallback>(
     cache: Map<string, SingleFileWatcher<T>>,
-    useCaseSensitiveFileNames: boolean,
+    toCanonicalFileName: GetCanonicalFileName,
     name: string,
     callback: T,
     createWatcher: (callback: T) => FileWatcher,
 ): FileWatcher {
-    const toCanonicalFileName = createGetCanonicalFileName(useCaseSensitiveFileNames);
     const path = toCanonicalFileName(name);
     const existing = cache.get(path);
     if (existing) {
@@ -941,15 +941,66 @@ export function createSystemWatchFunctions({
     const pollingWatches = new Map<string, SingleFileWatcher<FileWatcherCallback>>();
     const fsWatches = new Map<string, SingleFileWatcher<FsWatchCallback>>();
     const fsWatchesRecursive = new Map<string, SingleFileWatcher<FsWatchCallback>>();
+    const toCanonicalFileName = createGetCanonicalFileName(useCaseSensitiveFileNames);
     let dynamicPollingWatchFile: HostWatchFile | undefined;
     let fixedChunkSizePollingWatchFile: HostWatchFile | undefined;
     let nonPollingWatchFile: HostWatchFile | undefined;
     let hostRecursiveDirectoryWatcher: HostWatchDirectory | undefined;
     let hitSystemWatcherLimit = false;
     return {
-        watchFile,
+        watchFile: watchFileWithSymlink,
         watchDirectory,
     };
+
+    function watchFileWithSymlink(file: string, callback: FileWatcherCallback, pollingInterval: PollingInterval, options: WatchOptions | undefined): FileWatcher {
+        let current = getModifiedTime(file) || missingFileModifiedTime;
+        let watcher: FileWatcher | undefined = watchFile(file, fileCallback, pollingInterval, options);
+        type RealFileWatcher = FileWatcher & { realFilePath: Path; };
+        let realFileWatcher: RealFileWatcher | undefined;
+        let realFileName: string | undefined;
+        let realFilePath: Path | undefined;
+        let filePath: Path | undefined;
+        ensureRealFileWatcher();
+        return {
+            close() {
+                if (!watcher) return;
+                realFileWatcher?.close();
+                realFileWatcher = undefined;
+                watcher.close();
+                watcher = undefined;
+            },
+        };
+
+        function ensureRealFileWatcher() {
+            if (current === missingFileModifiedTime) {
+                realFileWatcher?.close();
+                realFileWatcher = undefined;
+                realFileName = undefined;
+                realFilePath = undefined;
+                return;
+            }
+
+            realFileName = realpath(file);
+            realFilePath = toPath(realFileName, getCurrentDirectory(), toCanonicalFileName);
+            if (filePath === undefined) filePath = toPath(file, getCurrentDirectory(), toCanonicalFileName);
+            if (filePath !== realFilePath && realFileWatcher?.realFilePath !== realFilePath) {
+                realFileWatcher?.close();
+                realFileWatcher = watchFile(
+                    realFileName,
+                    (_fileName, eventKind) => callback(file, eventKind),
+                    pollingInterval,
+                    options,
+                ) as RealFileWatcher;
+                realFileWatcher.realFilePath = realFilePath;
+            }
+        }
+
+        function fileCallback(fileName: string, eventKind: FileWatcherEventKind, modifiedTime?: Date) {
+            callback(fileName, eventKind, modifiedTime);
+            current = modifiedTime || getModifiedTime(file) || missingFileModifiedTime;
+            if (watcher) ensureRealFileWatcher();
+        }
+    }
 
     function watchFile(fileName: string, callback: FileWatcherCallback, pollingInterval: PollingInterval, options: WatchOptions | undefined): FileWatcher {
         options = updateOptionsForWatchFile(options, useNonPollingWatchers);
@@ -974,7 +1025,7 @@ export function createSystemWatchFunctions({
                 );
             case WatchFileKind.UseFsEventsOnParentDirectory:
                 if (!nonPollingWatchFile) {
-                    nonPollingWatchFile = createUseFsEventsOnParentDirectoryWatchFile(fsWatch, useCaseSensitiveFileNames);
+                    nonPollingWatchFile = createUseFsEventsOnParentDirectoryWatchFile(fsWatch, toCanonicalFileName);
                 }
                 return nonPollingWatchFile(fileName, callback, pollingInterval, getFallbackOptions(options));
             default:
@@ -1121,7 +1172,7 @@ export function createSystemWatchFunctions({
     function pollingWatchFile(fileName: string, callback: FileWatcherCallback, pollingInterval: PollingInterval, options: WatchOptions | undefined) {
         return createSingleWatcherPerName(
             pollingWatches,
-            useCaseSensitiveFileNames,
+            toCanonicalFileName,
             fileName,
             callback,
             cb => pollingWatchFileWorker(fileName, cb, pollingInterval, options),
@@ -1137,7 +1188,7 @@ export function createSystemWatchFunctions({
     ): FileWatcher {
         return createSingleWatcherPerName(
             recursive ? fsWatchesRecursive : fsWatches,
-            useCaseSensitiveFileNames,
+            toCanonicalFileName,
             fileOrDirectory,
             callback,
             cb => fsWatchHandlingExistenceOnHost(fileOrDirectory, entryKind, cb, recursive, fallbackPollingInterval, fallbackOptions),
