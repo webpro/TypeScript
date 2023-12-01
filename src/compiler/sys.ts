@@ -955,8 +955,7 @@ export function createSystemWatchFunctions({
     function watchFileWithSymlink(file: string, callback: FileWatcherCallback, pollingInterval: PollingInterval, options: WatchOptions | undefined): FileWatcher {
         let current = getModifiedTime(file) || missingFileModifiedTime;
         let watcher: FileWatcher | undefined = watchFile(file, fileCallback, pollingInterval, options);
-        type RealFileWatcher = FileWatcher & { realFilePath: Path; };
-        let realFileWatcher: RealFileWatcher | undefined;
+        let realFileWatcher: FileWatcher | undefined;
         let realFileName: string | undefined;
         let realFilePath: Path | undefined;
         let filePath: Path | undefined;
@@ -980,18 +979,18 @@ export function createSystemWatchFunctions({
                 return;
             }
 
-            realFileName = realpath(file);
-            realFilePath = toPath(realFileName, getCurrentDirectory(), toCanonicalFileName);
+            if (realFileName === undefined) {
+                realFileName = realpath(file);
+                realFilePath = toPath(realFileName, getCurrentDirectory(), toCanonicalFileName);
+            }
             if (filePath === undefined) filePath = toPath(file, getCurrentDirectory(), toCanonicalFileName);
-            if (filePath !== realFilePath && realFileWatcher?.realFilePath !== realFilePath) {
-                realFileWatcher?.close();
+            if (filePath !== realFilePath) {
                 realFileWatcher = watchFile(
                     realFileName,
                     (_fileName, eventKind) => callback(file, eventKind),
                     pollingInterval,
                     options,
-                ) as RealFileWatcher;
-                realFileWatcher.realFilePath = realFilePath;
+                );
             }
         }
 

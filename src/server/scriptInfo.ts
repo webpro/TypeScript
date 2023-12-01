@@ -47,6 +47,7 @@ import {
     maxFileSize,
     NormalizedPath,
     Project,
+    ProjectService,
     ScriptVersionCache,
     ServerHost,
 } from "./_namespaces/ts.server";
@@ -448,19 +449,18 @@ export class ScriptInfo {
         return this.textStorage.getSnapshot();
     }
 
-    private ensureRealPath() {
+    /** @internal */
+    ensureRealPath(projectService: ProjectService) {
         if (this.realpath === undefined) {
             // Default is just the path
             this.realpath = this.path;
             if (this.host.realpath) {
-                Debug.assert(!!this.containingProjects.length);
-                const project = this.containingProjects[0];
-                const realpath = this.host.realpath(this.path);
+                const realpath = this.host.realpath(this.fileName);
                 if (realpath) {
-                    this.realpath = project.toPath(realpath);
+                    this.realpath = projectService.toPath(realpath);
                     // If it is different from this.path, add to the map
                     if (this.realpath !== this.path) {
-                        project.projectService.realpathToScriptInfos!.add(this.realpath, this); // TODO: GH#18217
+                        projectService.realpathToScriptInfos!.add(this.realpath, this);
                     }
                 }
             }
@@ -492,9 +492,6 @@ export class ScriptInfo {
         const isNew = !this.isAttached(project);
         if (isNew) {
             this.containingProjects.push(project);
-            if (!project.getCompilerOptions().preserveSymlinks) {
-                this.ensureRealPath();
-            }
             project.onFileAddedOrRemoved(this.isSymlink());
         }
         return isNew;

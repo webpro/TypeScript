@@ -283,6 +283,10 @@ Info seq  [hh:mm:ss:mss] FileWatcher:: Triggered with /user/username/projects/my
 Info seq  [hh:mm:ss:mss] Scheduled: /user/username/projects/myproject/tsconfig.json
 Info seq  [hh:mm:ss:mss] Scheduled: *ensureProjectForOpenFiles*
 Info seq  [hh:mm:ss:mss] Elapsed:: *ms FileWatcher:: Triggered with /user/username/projects/myproject/XY.ts 1:: WatchInfo: /user/username/projects/myproject/XY.ts 500 undefined WatchType: Closed Script info
+Info seq  [hh:mm:ss:mss] FileWatcher:: Triggered with /user/username/projects/myproject/link.ts 1:: WatchInfo: /user/username/projects/myproject/link.ts 500 undefined WatchType: Closed Script info
+Info seq  [hh:mm:ss:mss] Scheduled: /user/username/projects/myproject/tsconfig.json, Cancelled earlier one
+Info seq  [hh:mm:ss:mss] Scheduled: *ensureProjectForOpenFiles*, Cancelled earlier one
+Info seq  [hh:mm:ss:mss] Elapsed:: *ms FileWatcher:: Triggered with /user/username/projects/myproject/link.ts 1:: WatchInfo: /user/username/projects/myproject/link.ts 500 undefined WatchType: Closed Script info
 Before request
 //// [/user/username/projects/myproject/XY.ts]
 // some comment
@@ -292,8 +296,8 @@ export const b = 2;
 
 
 Timeout callback:: count: 2
-2: /user/username/projects/myproject/tsconfig.json *new*
-3: *ensureProjectForOpenFiles* *new*
+4: /user/username/projects/myproject/tsconfig.json *new*
+5: *ensureProjectForOpenFiles* *new*
 
 Info seq  [hh:mm:ss:mss] request:
     {
@@ -314,23 +318,23 @@ Info seq  [hh:mm:ss:mss] response:
 After request
 
 Timeout callback:: count: 3
-2: /user/username/projects/myproject/tsconfig.json
-3: *ensureProjectForOpenFiles*
-4: checkOne *new*
+4: /user/username/projects/myproject/tsconfig.json
+5: *ensureProjectForOpenFiles*
+6: checkOne *new*
 
 Before running Timeout callback:: count: 3
-2: /user/username/projects/myproject/tsconfig.json
-3: *ensureProjectForOpenFiles*
-4: checkOne
+4: /user/username/projects/myproject/tsconfig.json
+5: *ensureProjectForOpenFiles*
+6: checkOne
 
-Invoking Timeout callback:: timeoutId:: 4:: checkOne
+Invoking Timeout callback:: timeoutId:: 6:: checkOne
 Info seq  [hh:mm:ss:mss] Starting updateGraphWorker: Project: /user/username/projects/myproject/tsconfig.json
 Info seq  [hh:mm:ss:mss] Finishing updateGraphWorker: Project: /user/username/projects/myproject/tsconfig.json Version: 2 structureChanged: false structureIsReused:: Completely Elapsed:: *ms
 Info seq  [hh:mm:ss:mss] Project '/user/username/projects/myproject/tsconfig.json' (Configured)
 Info seq  [hh:mm:ss:mss] 	Files (4)
 	/a/lib/lib.d.ts Text-1 "/// <reference no-default-lib=\"true\"/>\ninterface Boolean {}\ninterface Function {}\ninterface CallableFunction {}\ninterface NewableFunction {}\ninterface IArguments {}\ninterface Number { toExponential: any; }\ninterface Object {}\ninterface RegExp {}\ninterface String { charAt: any; }\ninterface Array<T> { length: number; [n: number]: T; }"
 	/user/username/projects/myproject/XY.ts Text-2 "// some comment\nexport const a = 1;\nexport const b = 2;\n"
-	/user/username/projects/myproject/link.ts Text-1 "export const a = 1;\nexport const b = 2;\n"
+	/user/username/projects/myproject/link.ts Text-2 "// some comment\nexport const a = 1;\nexport const b = 2;\n"
 	/user/username/projects/myproject/b.ts SVC-1-0 "import { a } from \"./XY\";\nimport { b } from \"./link\";\n\na;b;\n"
 
 Info seq  [hh:mm:ss:mss] -----------------------------------------------

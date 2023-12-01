@@ -225,28 +225,6 @@ Info seq  [hh:mm:ss:mss] response:
     }
 After request
 
-PolledWatches::
-/user/username/projects/myproject/node_modules/@types:
-  {"pollingInterval":500}
-/user/username/projects/node_modules/@types:
-  {"pollingInterval":500}
-
-FsWatches::
-/a/lib/lib.d.ts:
-  {}
-/user/username/projects/myproject/link.ts:
-  {}
-/user/username/projects/myproject/tsconfig.json:
-  {}
-
-FsWatches *deleted*::
-/user/username/projects/myproject/XY.ts:
-  {}
-
-FsWatchesRecursive::
-/user/username/projects/myproject:
-  {}
-
 Before request
 
 Info seq  [hh:mm:ss:mss] request:
@@ -291,6 +269,8 @@ FsWatches::
   {}
 
 FsWatches *deleted*::
+/user/username/projects/myproject/XY.ts:
+  {}
 /user/username/projects/myproject/link.ts:
   {}
 
