@@ -46946,13 +46946,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             case AssignmentDeclarationKind.ExportsProperty:
             case AssignmentDeclarationKind.PrototypeProperty:
                 return getSymbolOfNode(entityName.parent);
-            case AssignmentDeclarationKind.Property:
-                if (isPropertyAccessExpression(entityName.parent) && getLeftmostAccessExpression(entityName.parent) === entityName) {
-                    return undefined;
-                }
-                // falls through
             case AssignmentDeclarationKind.ThisProperty:
             case AssignmentDeclarationKind.ModuleExports:
+            case AssignmentDeclarationKind.Property:
                 return getSymbolOfDeclaration(entityName.parent.parent as BinaryExpression);
         }
     }
